@@ -1,5 +1,6 @@
 import selenium.common.exceptions as selExceptions
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
@@ -89,23 +90,42 @@ class CookieBot:
                                           "'Game.ImportSave()')]").click()
         with open(f"{file_name}.txt", mode="r") as file:
             save_text = file.read()
-            self.driver.find_element_by_id("textareaPrompt").\
+            self.driver.find_element_by_id("textareaPrompt"). \
                 send_keys(save_text)
         self.driver.find_element_by_id("promptOption0").click()
         self.driver.find_element_by_id("prefsButton").click()
 
+    def open_new_tab(self, url: str):
+        self.driver.execute_script(f'''window.open("{url}","_blank");''')
+        time.sleep(2)
+        for handle in self.driver.window_handles:
+            if handle != self.driver.current_window_handle:
+                self.driver.switch_to.window(handle)
+
+    def open_merchan_shop(self):
+        shop_button = self.driver. \
+            find_element_by_xpath("//a[contains(@class, "
+                                  "'blueLink')]")
+        shop_button.click()
+        for handle in self.driver.window_handles:
+            if handle != self.driver.current_window_handle:
+                self.driver.switch_to.window(handle)
+
+
 
 bot = CookieBot()
-bot.load_game("cookie_game_file")
-time.sleep(2)
-for j in range(5):
-    for i in range(100):
-        bot.click_cookie()
-    bot.buy_most_expensive_upgrade()
-    bot.buy_most_expensive_product()
+bot.open_merchan_shop()
+# bot.load_game("cookie_game_file")
+# time.sleep(2)
+# for j in range(5):
+#     for i in range(100):
+#         bot.click_cookie()
+#     bot.buy_most_expensive_upgrade()
+#     bot.buy_most_expensive_product()
+#
+# bot.save_game("cookie_game_file")
+# time.sleep(2)
 
-bot.save_game("cookie_game_file")
-time.sleep(2)
 
 ## Ejecutar hasta aquí... Y luego el resto.
 
