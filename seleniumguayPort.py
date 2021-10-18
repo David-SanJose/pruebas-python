@@ -4,6 +4,10 @@ from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
+from bs4 import BeautifulSoup
+import requests
+import re
+
 
 class CookieBot:
     driver = None
@@ -102,7 +106,7 @@ class CookieBot:
             if handle != self.driver.current_window_handle:
                 self.driver.switch_to.window(handle)
 
-    def open_merchan_shop(self):
+    def open_merchan_shop(self) -> str:
         shop_button = self.driver. \
             find_element_by_xpath("//a[contains(@class, "
                                   "'blueLink')]")
@@ -121,14 +125,16 @@ class CookieBot:
         time.sleep(0.5)
         self.driver.find_element_by_xpath("//div[contains(@aria-label, "
                                   "'Género')]").click()
+        return self.driver.current_url
         
-        time.sleep(2)
+    def test_first_searched_product(self):
+        time.sleep(1)
         busquedas = self.driver.find_element_by_id("SearchResultsGrid")
         url_busquedas = []
         for b in busquedas.find_elements_by_class_name("styles__link--3QJ5N"):
             url_busquedas.append(b.get_attribute("href"))
     
-        print("URLs: ",url_busquedas)
+        #print("URLs: ",url_busquedas)
         time.sleep(2)
         if len(url_busquedas) > 0:
             self.driver.get(url_busquedas[0])
@@ -141,10 +147,26 @@ class CookieBot:
                                   "'styles__list--2nCOW')]")
         tallas = menu_tallas.find_elements_by_class_name("styles__listItem--1L58f")
         tallas[3].click()
-
-
+        
+    def get_all_products_info_by_url(self, url:str):
+        r = requests.get(url)
+        soup = BeautifulSoup(r.content,"html5lib")
+        tabla = soup.find(id = "SearchResultsGrid")
+        matriz_products = []
+        for a in tabla.findAll("a"):
+            lista_product = []
+            lista_product.append(a.get("href"))
+            for span in a.findAll("span"):
+                texto = span.text.strip()
+                if texto != "": lista_product.append(texto)
+                    
+            matriz_products.append(lista_product[0:3])
+        
+        print(matriz_products)
 bot = CookieBot()
-bot.open_merchan_shop()
+url_camisetas_w = bot.open_merchan_shop()
+bot.get_all_products_info_by_url(url_camisetas_w)
+bot.test_first_searched_product()
 # bot.load_game("cookie_game_file")
 # time.sleep(2)
 # for j in range(5):
