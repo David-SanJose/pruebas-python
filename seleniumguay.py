@@ -4,6 +4,10 @@ from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
+from bs4 import BeautifulSoup
+import requests
+import re
+
 
 class CookieBot:
     driver = None
@@ -102,7 +106,7 @@ class CookieBot:
             if handle != self.driver.current_window_handle:
                 self.driver.switch_to.window(handle)
 
-    def open_merchan_shop(self):
+    def open_merchan_shop(self) -> str:
         shop_button = self.driver. \
             find_element_by_xpath("//a[contains(@class, "
                                   "'blueLink')]")
@@ -110,21 +114,95 @@ class CookieBot:
         for handle in self.driver.window_handles:
             if handle != self.driver.current_window_handle:
                 self.driver.switch_to.window(handle)
+        time.sleep(1)
 
+        self.driver.find_element_by_xpath("//button[contains(@title, "
+                                          "'Ropa')]").click()
+        time.sleep(2)
+        self.driver.find_element_by_xpath("//button[contains(@title, "
+                                          "'Camisetas')]").click()
+
+        time.sleep(0.5)
+        self.driver.find_element_by_xpath("//div[contains(@aria-label, "
+                                          "'Género')]").click()
+        return self.driver.current_url
+
+    def test_first_searched_product(self):
+        time.sleep(1)
+        busquedas = self.driver.find_element_by_id("SearchResultsGrid")
+        url_busquedas = []
+        for b in busquedas.find_elements_by_class_name("styles__link--3QJ5N"):
+            url_busquedas.append(b.get_attribute("href"))
+
+        # print("URLs: ",url_busquedas)
+        time.sleep(2)
+        if len(url_busquedas) > 0:
+            self.driver.get(url_busquedas[0])
+
+        time.sleep(1)
+        self.driver.find_element_by_xpath("//button[contains(@data-testid, "
+                                          "'ds-select')]").click()
+        time.sleep(1)
+        menu_tallas = self.driver.find_element_by_xpath("//ul[contains(@class, "
+                                                        "'styles__list--2nCOW')]")
+        tallas = menu_tallas.find_elements_by_class_name("styles__listItem--1L58f")
+        tallas[3].click()
+
+    def get_all_products_info_by_url(self, url: str):
+        r = requests.get(url)
+        soup = BeautifulSoup(r.content, "html5lib")
+        tabla = soup.find(id="SearchResultsGrid")
+        matriz_products = []
+        for a in tabla.findAll("a"):
+            lista_product = [a.get("href")]
+            for span in a.findAll("span"):
+                texto = span.text.strip()
+                if texto != "": lista_product.append(texto)
+
+            matriz_products.append(lista_product[0:3])
+
+        print(matriz_products)
 
 
 bot = CookieBot()
-bot.open_merchan_shop()
-# bot.load_game("cookie_game_file")
-# time.sleep(2)
-# for j in range(5):
-#     for i in range(100):
-#         bot.click_cookie()
-#     bot.buy_most_expensive_upgrade()
-#     bot.buy_most_expensive_product()
-#
-# bot.save_game("cookie_game_file")
-# time.sleep(2)
+val_menu = "0"
+while val_menu != "4":
+    val_menu = input("""Opciones (Del 1 al 4):
+    1- Jugar
+    2- Tienda
+    3- Info
+    4- Salir
+    """)
+    if val_menu == "1":
+        bot.load_game("cookie_game_file")
+        time.sleep(2)
+        for j in range(5):
+            for i in range(100):
+                bot.click_cookie()
+            bot.buy_most_expensive_upgrade()
+            bot.buy_most_expensive_product()
+
+        bot.save_game("cookie_game_file")
+        time.sleep(2)
+    elif val_menu == "2":
+        url_camisetas_w = bot.open_merchan_shop()
+        bot.get_all_products_info_by_url(url_camisetas_w)
+        bot.test_first_searched_product()
+    elif val_menu == "3":
+        print("""-Jugar:
+        Carga la partida si existe, y hace 5 iteraciones
+        de 100 clicks, comprando al final tanto mejoras como
+        productos (Juega solo), guardando tras esto la partida (Click en
+        diversos elementos, lectura y escritura en campo de
+        texto)
+        
+        -Tienda:
+        Abre una nueva pestaña, accede a la tienda, despliega
+        el menu de Ropa -> Camisetas, selecciona ropa de mujer,
+        trae la info de todas las prendas y accede a la 2da, para
+        despues elegir talla""")
+
+
 
 
 ## Ejecutar hasta aquí... Y luego el resto.
