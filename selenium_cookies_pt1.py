@@ -32,6 +32,14 @@ class CookieBot:
         url = "https://orteil.dashnet.org/cookieclicker/"
         self.driver.get(url)
         time.sleep(1)  # Espera para que la pagina cargue
+        # Quita las cookies publicitarias (Las de la pagina de verdad...)
+        try:
+            self.driver.find_element_by_xpath("//a[contains(@class, "
+                                          "'cc_btn cc_btn_accept_all')]").click()
+        except selExceptions.StaleElementReferenceException:
+            print("PRODUCT BUY FAILED: Element not attached to the page")
+        except selExceptions.ElementClickInterceptedException:
+            print("PRODUCT BUY FAILED: element click intercepted")
 
     def click_cookie(self):  # Hace click en la galleta
         coord = self.driver.find_element_by_id("bigCookie")
@@ -201,7 +209,7 @@ class CookieBot:
 
 
 # Función para almacenar una lista en un csv
-def save_list_to_csv(file: str, cabecera: list,lista: list):
+def save_list_to_csv(file: str, cabecera: list, lista: list):
     with open(file, 'w', newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(cabecera)
@@ -231,7 +239,7 @@ while val_menu != "4":
                 bot.click_cookie()
             # Ejecuta un script para cerrar los logros que van apareciendo
             bot.driver.execute_script("Game.CloseNotes()")
-            #Compra de mejoras y productos
+            # Compra de mejoras y productos
             bot.buy_most_expensive_upgrade()
             bot.buy_most_expensive_product()
         # Guarda la partida
