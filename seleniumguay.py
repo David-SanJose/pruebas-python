@@ -68,7 +68,7 @@ class CookieBot:
         except selExceptions.ElementClickInterceptedException:
             print("UPGRADE BUY FAILED: element click intercepted")
 
-    # Compra el producto más alta disponible
+    # Compra el producto más alto disponible
     def buy_most_expensive_product(self):
         try:
             a_cookies = self.get_actual_cookies()
@@ -220,14 +220,21 @@ while val_menu != "4":
     4- Salir
     """)
     if val_menu == "1":
+        # Carga el archivo de guardado, si existe
         bot.load_game("cookie_game_file")
+        # Espera 2 segundos
         time.sleep(2)
+        # Hace 5 iteraciones de 100 clics, comprando al final de
+        # cada una, la mejora mas cara
         for j in range(5):
             for i in range(100):
                 bot.click_cookie()
+            # Ejecuta un script para cerrar los logros que van apareciendo
+            bot.driver.execute_script("Game.CloseNotes()")
+            #Compra de mejoras y productos
             bot.buy_most_expensive_upgrade()
             bot.buy_most_expensive_product()
-
+        # Guarda la partida
         bot.save_game("cookie_game_file")
         time.sleep(2)
     elif val_menu == "2":

@@ -23,7 +23,7 @@ class CookieBot:
         coord.click()
         time.sleep(0.005)
 
-    def get_actual_cookies(self) -> str:
+    def get_actual_cookies(self) -> int:
         return self.parse_textcookies_to_int(
             self.driver.find_element_by_id("cookies").text)
 
