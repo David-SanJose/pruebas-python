@@ -9,11 +9,13 @@ import os
 from tweepy import Stream
 from tweepy import OAuthHandler
 
+
 # Creo un listener que hereda de Stream, para asi poder modificar la funcion
 # on_data y on_disconnect, alterando como y cuando escribe en el archivo los datos
 class MyListener (Stream):
-    #Archivo donde se almacenaran los tweets
-    path_json = "SpydyNWH.json"
+    #Archivo donde se almacenaran los tweets (Le he cambiado el nombre para que no borre los
+    # anteriormente recogidos para las pruebas con pandas)
+    path_json = "SpydyNWH2.json"
 
     # Función que se llama cada vez que entra un nuevo dato,
     # introduciendolo en el archivo json
@@ -43,10 +45,10 @@ class MyListener (Stream):
             f.write("]")
 
 
-# Espera 2 minutos y cierra la conexion
-def cerrarALos2min(stream: Stream):
+# Espera x segundos y cierra la conexion
+def cerrar_en_X_segundos(stream: Stream, x: int):
     print("inicio")
-    time.sleep(120)
+    time.sleep(x)
     stream.disconnect()
 
 #Credenciales del Twitter API
@@ -62,7 +64,7 @@ api = tweepy.API(auth)
 
 twitter_stream = MyListener(consumer_key, consumer_secret, access_token, access_secret)
 # Lanzo un hilo con la funcion que espera 2 min, para darle tiempo a que tome los tweets
-tempo = threading.Thread(target=cerrarALos2min, args=(twitter_stream,))
+tempo = threading.Thread(target=cerrar_en_X_segundos, args=(twitter_stream, 120))
 tempo.start()
 # Mientras el hilo se ejecuta, lanzo la busqueda de los tweets relacionados con la
 # pelicula de Spiderman No Way Home, la cual era trending en el momento
