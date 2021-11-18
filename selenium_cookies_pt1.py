@@ -4,6 +4,7 @@ from selenium import webdriver
 
 from webdriver_manager.chrome import ChromeDriverManager
 # PARA INTRODUCIR ESPERAS
+import threading
 import time
 # BEAUTIFULSOUP Y REQUEST DE PAGINAS
 from bs4 import BeautifulSoup
@@ -26,12 +27,13 @@ en un archivo csv"""
 
 class CookieBot:
     driver = None
+    clicando = False
 
     def __init__(self):  # Carga el driver
         self.driver = webdriver.Chrome(ChromeDriverManager().install())
         url = "https://orteil.dashnet.org/cookieclicker/"
         self.driver.get(url)
-        time.sleep(1)  # Espera para que la pagina cargue
+        time.sleep(3)  # Espera para que la pagina cargue
         # Quita las cookies publicitarias (Las de la pagina de verdad...)
         try:
             self.driver.find_element_by_xpath("//a[contains(@class, "
@@ -40,11 +42,21 @@ class CookieBot:
             print("PRODUCT BUY FAILED: Element not attached to the page")
         except selExceptions.ElementClickInterceptedException:
             print("PRODUCT BUY FAILED: element click intercepted")
+        except selExceptions.NoSuchElementException:
+            print("Elemento no encontrado, no es posible hacer clic")
 
     def click_cookie(self):  # Hace click en la galleta
         coord = self.driver.find_element_by_id("bigCookie")
         coord.click()
         time.sleep(0.005)
+
+    def loop_de_clics_hasta_parar(self):
+        self.clicando = True
+        while self.clicando:
+            self.click_cookie()
+
+    def set_clicando(self, value: bool):
+        self.clicando = value
 
     # Devuelve el valor de galletas total actual
     def get_actual_cookies(self) -> int:
@@ -226,6 +238,7 @@ while val_menu != "4":
     2- Tienda
     3- Info
     4- Salir
+    99- Clicks hasta parar
     """)
     if val_menu == "1":
         # Carga el archivo de guardado, si existe
@@ -266,3 +279,10 @@ while val_menu != "4":
         el menu de Ropa -> Camisetas, selecciona ropa de mujer,
         trae la info de todas las prendas y accede a la 2da, para
         despues elegir talla""")
+    elif val_menu == "99":
+        hilo_clicks = threading.Thread(target=bot.loop_de_clics_hasta_parar)
+        hilo_clicks.start()
+        input("Enter para finalizar")
+        bot.set_clicando(False)
+
+
